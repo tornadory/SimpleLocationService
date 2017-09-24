@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
 
     TelephonyManager tm;
 
+    boolean registed = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,10 +65,15 @@ public class MainActivity extends AppCompatActivity {
         tvEmail = (TextView)findViewById(R.id.txEmail);
 
         SharedPreferences sharedPre=getSharedPreferences("config", MODE_PRIVATE);
+
         username=sharedPre.getString("username", "");
         email=sharedPre.getString("email", "");
         tvUserName.setText(username);
         tvEmail.setText(email);
+
+        if(username != ""){
+            registed = true;
+        }
 
     }
 
@@ -104,10 +112,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void sendPostRequest(View View) {
         new PostClass(this).execute();
-    }
-
-    public void sendGetRequest(View View) {
-        new GetClass(this).execute();
     }
 
 
@@ -151,22 +155,32 @@ public class MainActivity extends AppCompatActivity {
                 dStream.close();
                 int responseCode = connection.getResponseCode();
 
+                if(responseCode == 200){
+                    //
+                    SharedPreferences sharedPre= getSharedPreferences("config", MODE_PRIVATE);
+                    SharedPreferences.Editor editor=sharedPre.edit();
+                    editor.putString("username", username);
+                    editor.putString("email", email);
+                    editor.commit();
+                    registed = true;
+                }
+
                 System.out.println("\nSending 'POST' request to URL : " + url);
                 System.out.println("Response Code : " + responseCode);
 
-                final StringBuilder output = new StringBuilder("Request URL " + url);
-                output.append(System.getProperty("line.separator")  + "Response Code " + responseCode);
-                output.append(System.getProperty("line.separator")  + "Type " + "POST");
-                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                String line = "";
-                StringBuilder responseOutput = new StringBuilder();
-                System.out.println("output===============" + br);
-                while((line = br.readLine()) != null ) {
-                    responseOutput.append(line);
-                }
-                br.close();
-
-                output.append(System.getProperty("line.separator") + "Response " + System.getProperty("line.separator") + System.getProperty("line.separator") + responseOutput.toString());
+//                final StringBuilder output = new StringBuilder("Request URL " + url);
+//                output.append(System.getProperty("line.separator")  + "Response Code " + responseCode);
+//                output.append(System.getProperty("line.separator")  + "Type " + "POST");
+//                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+//                String line = "";
+//                StringBuilder responseOutput = new StringBuilder();
+//                System.out.println("output===============" + br);
+//                while((line = br.readLine()) != null ) {
+//                    responseOutput.append(line);
+//                }
+//                br.close();
+//
+//                output.append(System.getProperty("line.separator") + "Response " + System.getProperty("line.separator") + System.getProperty("line.separator") + responseOutput.toString());
 
                 MainActivity.this.runOnUiThread(new Runnable() {
 
@@ -195,99 +209,34 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private class GetClass extends AsyncTask<String, Void, Void> {
-
-        private final Context context;
-
-        public GetClass(Context c){
-            this.context = c;
-        }
-
-        protected void onPreExecute(){
-            progress= new ProgressDialog(this.context);
-            progress.setMessage("Loading");
-            progress.show();
-        }
-
-        @Override
-        protected Void doInBackground(String... params) {
-            try {
-
-                URL url = new URL("https://simple-location-demo.herokuapp.com/locations");
-
-                HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-                String urlParameters = "fizz=buzz";
-                connection.setRequestMethod("GET");
-                connection.setRequestProperty("USER-AGENT", "Mozilla/5.0");
-                connection.setRequestProperty("ACCEPT-LANGUAGE", "en-US,en;0.5");
-
-                int responseCode = connection.getResponseCode();
-
-                System.out.println("\nSending 'POST' request to URL : " + url);
-                System.out.println("Post parameters : " + urlParameters);
-                System.out.println("Response Code : " + responseCode);
-
-                final StringBuilder output = new StringBuilder("Request URL " + url);
-                output.append(System.getProperty("line.separator")  + "Response Code " + responseCode);
-                output.append(System.getProperty("line.separator")  + "Type " + "GET");
-                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                String line = "";
-                StringBuilder responseOutput = new StringBuilder();
-                System.out.println("output===============" + br);
-                while((line = br.readLine()) != null ) {
-                    responseOutput.append(line);
-                }
-                br.close();
-
-                output.append(System.getProperty("line.separator") + "Response " + System.getProperty("line.separator") + System.getProperty("line.separator") + responseOutput.toString());
-
-                MainActivity.this.runOnUiThread(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        progress.dismiss();
-
-                    }
-                });
-
-
-            } catch (MalformedURLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            return null;
-        }
-    }
 
     public void regUser(View view){
-        if(tvUserName.getText().length() > 1 && tvEmail.getText().length()> 1){
+        if(tvUserName.getText().length() > 0 && tvEmail.getText().length()> 0){
             username = tvUserName.getText().toString();
             email = tvEmail.getText().toString();
 
-            SharedPreferences sharedPre= getSharedPreferences("config", MODE_PRIVATE);
-            SharedPreferences.Editor editor=sharedPre.edit();
-            editor.putString("username", username);
-            editor.putString("email", email);
-            editor.commit();
             sendPostRequest(view);
         }
     }
 
     public void hideMe(View View){
         System.out.println(TAG + "hideMe called p");
-        System.out.println(TAG + "try to start service");
+        if(registed){
+            System.out.println(TAG + "try to start service");
 
 
-        mSimpleLocationService = new SimpleLocationService(this);
-        mServiceIntent = new Intent(this, mSimpleLocationService.getClass());
+            mSimpleLocationService = new SimpleLocationService(this);
+            mServiceIntent = new Intent(this, mSimpleLocationService.getClass());
 
-        if (!isMyServiceRunning(mSimpleLocationService.getClass())) {
-            startService(mServiceIntent);
+            if (!isMyServiceRunning(mSimpleLocationService.getClass())) {
+                startService(mServiceIntent);
+            }
+
+            finish();
+        }else {
+            Toast.makeText(getApplicationContext(), "Please register first!", Toast.LENGTH_LONG).show();
+            System.out.println("have not been registered");
         }
 
-        finish();
     }
 }

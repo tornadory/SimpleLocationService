@@ -38,6 +38,11 @@ public class SimpleLocationService extends Service implements LocationSource, AM
     String username = "";
     String email = "";
 
+    Double lastLat = 0.0;
+    Double lastLon = 0.0;
+    long lastTime = 0;
+    int scheduleTime = 60 * 1000;
+
     AMapLocation location;
 
     public SimpleLocationService(Context applicationContext) {
@@ -75,6 +80,8 @@ public class SimpleLocationService extends Service implements LocationSource, AM
         mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
         mLocationOption.setNeedAddress(true);
         mLocationOption.setInterval(10000);
+//        mLocationOption.setGpsFirst(true);
+//        mLocationOption.setOffset(true);
         mLocationClient.setLocationOption(mLocationOption);
         mLocationClient.startLocation();
     }
@@ -88,7 +95,13 @@ public class SimpleLocationService extends Service implements LocationSource, AM
 
             if(aMapLocation.getErrorCode() == 0){
                 location = aMapLocation;
-                sendPostRequest();
+                if(location.getLatitude() != lastLat || location.getLongitude() != lastLon || (System.currentTimeMillis() - lastTime > scheduleTime)){
+                    lastLat = location.getLatitude();
+                    lastLon = location.getLongitude();
+                    lastTime = System.currentTimeMillis();
+                    sendPostRequest();
+                }
+
             }else {
                 System.out.println("aMapLocation getErrorCode is not equal to 0");
             }

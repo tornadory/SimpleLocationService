@@ -55,13 +55,10 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
     </application>
-
-
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"></uses-permission>
 
     <uses-feature
         android:name="android.hardware.location"
@@ -71,7 +68,7 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
+    <!--<uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>-->
     <uses-permission android:name="android.permission.READ_SMS"/>
     <!--用于进行网络定位-->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"></uses-permission>
