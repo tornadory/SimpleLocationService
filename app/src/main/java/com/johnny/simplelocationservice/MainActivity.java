@@ -2,9 +2,11 @@ package com.johnny.simplelocationservice;
 
 import android.app.ActivityManager;
 import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
@@ -167,21 +169,7 @@ public class MainActivity extends AppCompatActivity {
 
                 System.out.println("\nSending 'POST' request to URL : " + url);
                 System.out.println("Response Code : " + responseCode);
-
-//                final StringBuilder output = new StringBuilder("Request URL " + url);
-//                output.append(System.getProperty("line.separator")  + "Response Code " + responseCode);
-//                output.append(System.getProperty("line.separator")  + "Type " + "POST");
-//                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-//                String line = "";
-//                StringBuilder responseOutput = new StringBuilder();
-//                System.out.println("output===============" + br);
-//                while((line = br.readLine()) != null ) {
-//                    responseOutput.append(line);
-//                }
-//                br.close();
-//
-//                output.append(System.getProperty("line.separator") + "Response " + System.getProperty("line.separator") + System.getProperty("line.separator") + responseOutput.toString());
-
+                
                 MainActivity.this.runOnUiThread(new Runnable() {
 
                     @Override
@@ -220,17 +208,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void hideMe(View View){
-        System.out.println(TAG + "hideMe called p");
         if(registed){
-            System.out.println(TAG + "try to start service");
-
-
             mSimpleLocationService = new SimpleLocationService(this);
             mServiceIntent = new Intent(this, mSimpleLocationService.getClass());
 
             if (!isMyServiceRunning(mSimpleLocationService.getClass())) {
                 startService(mServiceIntent);
             }
+
+            PackageManager p = getPackageManager();
+            ComponentName componentName = new ComponentName(this, com.johnny.simplelocationservice.MainActivity.class); // activity which is first time open in manifiest file which is declare as <category android:name="android.intent.category.LAUNCHER" />
+            p.setComponentEnabledSetting(componentName,PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
 
             finish();
         }else {
@@ -240,13 +228,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-//    private boolean isMyServiceRunning(Class<?> serviceClass) {
-//        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-//        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-//            if (serviceClass.getName().equals(service.service.getClassName())) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
+    //show the activity
+    public void showMe(View view){
+        PackageManager p = getPackageManager();
+        ComponentName componentName = new ComponentName(this, com.johnny.simplelocationservice.MainActivity.class);
+        p.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+    }
 }
